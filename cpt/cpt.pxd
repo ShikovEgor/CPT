@@ -10,9 +10,8 @@ cdef class Cpt:
         PredictionTree tree
         vector[Bitset] inverted_index
         vector[size_t] lookup_table
-
         int predict_seq(self, vector[int] target_sequence, vector[int] least_frequent_items) nogil
-        vector[int] predict_seq_k(self, vector[int] target_sequence, vector[int] least_frequent_items, int k=*) nogil
+        vector[int] predict_seq_k(self, vector[int] target_sequence, vector[int] least_frequent_items,  vector[int]& scores, int k=*) nogil
         Scorer make_scorer(self, vector[int], vector[int]) nogil
         vector[int] c_retrieve_reversed_sequence(self, int index) nogil
         vector[int] c_compute_noisy_items(self, float noise_ratio) nogil

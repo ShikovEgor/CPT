@@ -7,6 +7,7 @@ from libcpp.queue cimport queue
 from libcpp.iterator cimport back_inserter
 from cython.parallel import prange
 from cpython.object cimport Py_EQ, Py_NE
+from libc.stdio cimport printf
 
 from cpt.prediction_tree cimport PredictionTree, Node, ROOT
 from cpt.alphabet cimport Alphabet
@@ -200,7 +201,7 @@ cdef class Cpt:
             Py_ssize_t i, j
             int len_sequences = len(sequences)
             vector[vector[int]] int_predictions
-
+            vector[int] scores
         _check_noise_ratio(self.noise_ratio)
 
         _check_MBR(self.MBR)
@@ -208,18 +209,18 @@ cdef class Cpt:
         least_frequent_items = self.c_compute_noisy_items(self.noise_ratio)
 
         int_predictions = vector[vector[int]](len_sequences)
+        scores = vector[int]()
 
         sequences_indexes = self._prepare_data(sequences)
 
         # Predictions
         if multithreading:
             for i in prange(len_sequences, nogil=True, schedule='dynamic'):
-                int_predictions[i] = self.predict_seq_k(sequences_indexes[i], least_frequent_items, k)
+                int_predictions[i] = self.predict_seq_k(sequences_indexes[i], least_frequent_items, scores, k)
         else:
             for i in range(len_sequences):
-                int_predictions[i] = self.predict_seq_k(sequences_indexes[i], least_frequent_items, k)
-
-        return [[self.alphabet.get_symbol(y) for y in x] for x in int_predictions]
+                int_predictions[i] = self.predict_seq_k(sequences_indexes[i], least_frequent_items, scores, k) 
+        return [[self.alphabet.get_symbol(y) for y in x] for x in int_predictions], scores
 
     cpdef vector[vector[int]] _prepare_data(self, list sequences):
         cdef vector[vector[int]] sequences_indexes
@@ -302,8 +303,17 @@ cdef class Cpt:
     cdef int predict_seq(self, vector[int] target_sequence, vector[int] least_frequent_items) nogil:
         return self.make_scorer(target_sequence, least_frequent_items).get_best_prediction()
 
-    cdef vector[int] predict_seq_k(self, vector[int] target_sequence, vector[int] least_frequent_items, int k=1) nogil:
-        return self.make_scorer(target_sequence, least_frequent_items).get_best_k_predictions(k)
+    cdef vector[int] predict_seq_k(self, vector[int] target_sequence, vector[int] least_frequent_items, vector[int]& scores, int k=1) nogil:
+        cdef vector[int] pred = self.make_scorer(target_sequence, least_frequent_items).get_best_k_predictions(k)
+        cdef int ii
+        
+        scorer = self.make_scorer(target_sequence, least_frequent_items)
+        
+        # Iterate through 'pred' to get corresponding scores
+        for ii in pred:
+            scores.push_back(scorer.get_score(ii))
+        return pred
+
 
     cdef Scorer make_scorer(self, vector[int] target_sequence, vector[int] least_frequent_items) nogil:
         cdef:
