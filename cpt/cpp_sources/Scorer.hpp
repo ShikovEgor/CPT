@@ -11,6 +11,8 @@ public:
 
     int get_score(std::size_t index) const;
 
+    int get_sum() const;
+
     void update(std::size_t index);
 
     bool predictable() const;

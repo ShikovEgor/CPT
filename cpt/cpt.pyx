@@ -201,7 +201,7 @@ cdef class Cpt:
             Py_ssize_t i, j
             int len_sequences = len(sequences)
             vector[vector[int]] int_predictions
-            vector[int] scores
+            vector[int] score
         _check_noise_ratio(self.noise_ratio)
 
         _check_MBR(self.MBR)
@@ -312,6 +312,7 @@ cdef class Cpt:
         # Iterate through 'pred' to get corresponding scores
         for ii in pred:
             scores.push_back(scorer.get_score(ii))
+        scores.push_back(scorer.get_sum())
         return pred
 
 

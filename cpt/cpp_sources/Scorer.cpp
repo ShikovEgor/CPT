@@ -1,5 +1,6 @@
 #include "Scorer.hpp"
 #include <algorithm>
+#include <numeric>       
 
 namespace
 {
@@ -38,6 +39,14 @@ int Scorer::get_score(std::size_t index) const
 {
     return m_data[index];
 }
+
+
+int  Scorer::get_sum() const
+{
+    int result = std::accumulate(m_data.begin(), m_data.end(), 0);
+    return result;
+}
+
 
 void Scorer::update(std::size_t index)
 {
