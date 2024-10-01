@@ -53,6 +53,5 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url=url,
-    install_requires=['Cython'],
     python_requires=">=3.8, <4",
 )
