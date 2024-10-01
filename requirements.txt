@@ -1,0 +1,2 @@
+Cython
+cpt @ git+https://github.com/ShikovEgor/CPT.git
